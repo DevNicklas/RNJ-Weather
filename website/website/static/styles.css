@@ -1,0 +1,177 @@
+/* Global styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f3f3f9;
+    margin: 0;
+    padding: 0;
+}
+
+/* Map container */
+#map {
+    height: 100vh;
+    width: 100%;
+}
+
+/* Modal overlay */
+.modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    backdrop-filter: blur(3px);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Modal content */
+.modal-content {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+}
+
+/* Close button */
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s ease;
+    border-radius: 6px;
+}
+
+.modal-close:hover {
+    transform: scale(1.05);
+}
+
+.modal-close img {
+    pointer-events: none;
+    width: 24px;
+    height: 24px;
+}
+
+/* Modal title */
+.modal-title {
+    margin-top: 0;
+    margin-bottom: 12px;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+/* Two-column layout */
+.columns-container {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 12px;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    margin: 0;          /* remove default spacing */
+}
+
+.column1, .column2 {
+    display: grid;
+    grid-template-rows: repeat(4, auto); /* 4 rows in column1 */
+	gap: 0;
+}
+
+.column2 {
+    grid-template-rows: repeat(4, auto); /* 3 rows in column2 */
+}
+
+/* Align labels */
+.row div b {
+    width: 140px; /* make all labels same width */
+}
+
+.temperature-row {
+    flex-direction: column; 
+    align-items: flex-start;
+    gap: 4px;           /* only for the red dot + temperature text */
+}
+
+.live-dot {
+    width: 10px;
+    height: 10px;
+    background-color: red;
+    border-radius: 50%;
+}
+
+
+/* Chart container */
+.chart-container {
+    width: 100%;
+    height: 200px;
+    margin-top: 12px;
+}
+
+#temperatureChart {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Status board */
+#status-board {
+    position: fixed;
+    top: 20px;
+    right: 0;
+    width: 250px;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    border-radius: 12px 0 0 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+/* Slide hidden */
+#status-board.hidden {
+    transform: translateX(210px); /* only the toggle visible */
+}
+
+/* Toggle button at top-left */
+#status-toggle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-weight: bold;
+    user-select: none;
+    border-radius: 12px 0 0 0;
+    transition: transform 0.3s ease;
+}
+
+/* Flip arrow when hidden */
+#status-board.hidden #status-toggle {
+    transform: rotate(180);
+}
+
+/* Content area */
+#status-content {
+    padding: 12px;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    margin-top: 20px; /* leave space for toggle */
+}
