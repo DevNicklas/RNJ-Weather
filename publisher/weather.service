@@ -6,6 +6,7 @@ After=network.target
 Type=simple
 ExecStart=/home/<username>/publisher/venv/bin/python /home/<username>/publisher/import_requests.py
 WorkingDirectory=/home/<username>/publisher
+Restart=always
 RestartSec=5
 User=<username>
 Environment="PYTHONBUFFERED=1"
