@@ -30,18 +30,6 @@ BEGIN
 END;
 $$;
 
--- Count cities
-CREATE OR REPLACE FUNCTION get_number_of_citys()
-RETURNS INTEGER
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    city_count INTEGER;
-BEGIN
-    SELECT COUNT(*) INTO city_count FROM city;
-    RETURN city_count;
-END;
-$$;
 
 -- Daily reports
 CREATE OR REPLACE FUNCTION get_daily_reports(p_date DATE DEFAULT NULL)
