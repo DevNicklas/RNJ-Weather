@@ -1,0 +1,17 @@
+[Unit]
+Description=Weather Forecast Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/<username>/publisher/venv/bin/python /home/<username>/publisher/import_requests.py
+WorkingDirectory=/home/<username>/publisher
+RestartSec=5
+User=<username>
+Environment="PYTHONBUFFERED=1"
+CPUQuota=100%
+MemoryMax=4G
+Nice=0
+
+[Install]
+WantedBy=multi-user.target
