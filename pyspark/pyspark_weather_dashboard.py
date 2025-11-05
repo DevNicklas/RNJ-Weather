@@ -1,6 +1,7 @@
 import sys
 import os
 from datetime import datetime
+import time
 import pytz
 
 from pyspark.sql import SparkSession, Row
@@ -26,7 +27,7 @@ from database_utils import (
 
 TZ = "Europe/Copenhagen"
 
-# define an explicit empty schema once
+# ✅ define an explicit empty schema once
 EMPTY_WEATHER_SCHEMA = StructType([
     StructField("city", StringType(), True),
     StructField("country", StringType(), True),
@@ -39,15 +40,17 @@ EMPTY_WEATHER_SCHEMA = StructType([
 
 
 def load_weather_df(spark):
-    """Load data directly from the database without recalculating weather_status"""
+    """Indlæs data direkte fra databasen uden at genberegne weather_status"""
     data = get_weather_from_postgres()
     if not data:
-        print("No data retrieved from database.")
-        # use the struct schema instead of string
+        print("Ingen data hentet fra databasen.")
+        # ✅ use the struct schema instead of string
         return spark.createDataFrame([], schema=EMPTY_WEATHER_SCHEMA)
 
+    # Opret DataFrame direkte fra Postgres-resultatet
     df = spark.createDataFrame([Row(**r) for r in data])
 
+    # Sørg for korrekte datatyper
     df = (
         df
         .withColumn("temperature_celsius", col("temperature_celsius").cast("double"))
@@ -57,8 +60,9 @@ def load_weather_df(spark):
 
     return df
 
+
 def compute_daily_stats(df, target_date_str):
-    """min/max/avg per city for given date (string YYYY-MM-DD)"""
+    """min/max/avg pr. by for given date (string YYYY-MM-DD)"""
     return (
         df.filter(col("recorded_date") == lit(target_date_str))
           .groupBy("city")
@@ -75,9 +79,9 @@ def compute_monthly_analytics(df, year=None, month=None):
     """Compute monthly analytics:
        - avg temperature by weather status (from raw data)
        - min/max temperatures (from daily_report)"""
-    # guard: if df is empty, no need to go further
+    # ✅ guard: if df is empty, no need to go further
     if not df.take(1):
-        print("No data available in DataFrame.")
+        print("⚠️ No data available in DataFrame.")
         return None, None, None, None
 
     tz = pytz.timezone(TZ)
@@ -86,7 +90,7 @@ def compute_monthly_analytics(df, year=None, month=None):
     month = month or now.month
     report_month = f"{year}-{month:02}-01"
 
-    # === Average by weather status ===
+    # === 1) Average by weather status ===
     df_month = df.filter((col("recorded_at").substr(1, 7) == f"{year}-{month:02}"))
     avg_by_status_df = (
         df_month.groupBy("weather_status")
@@ -97,10 +101,10 @@ def compute_monthly_analytics(df, year=None, month=None):
         for r in avg_by_status_df.collect()
     ]
 
-    # === Extremes (from daily_report) ===
+    # === 2) Extremes (from daily_report) ===
     daily_rows = get_daily_reports_for_month(year, month)
     if not daily_rows:
-        print("No daily data for month -> skipping monthly extremes.")
+        print("⚠️ No daily data for month -> skipping monthly extremes.")
         return report_month, avg_list, None, None
 
     # Find monthly min/max from daily aggregates
@@ -125,7 +129,7 @@ def compute_monthly_analytics(df, year=None, month=None):
 
 
 def main():
-    # make Spark use the same python as this process (helps on Windows)
+    # ✅ make Spark use the same python as this process (helps on Windows)
     spark = (
         SparkSession.builder
         .appName("WeatherDashboard")
@@ -135,14 +139,14 @@ def main():
     )
     spark.sparkContext.setLogLevel("ERROR")
 
-    print("Starting Weather report job...")
+    print("🚀 Starting Weather Dashboard job...")
 
     df = load_weather_df(spark)
 
     # ---------- DAILY ----------
     tz = pytz.timezone(TZ)
     today_str = datetime.now(tz).date().isoformat()
-    print(f"Calculates daily report for {today_str}")
+    print(f"📅 Beregner daglig rapport for {today_str}")
 
     # this is safe even if df is empty: compute_daily_stats will return empty df
     daily_df = compute_daily_stats(df, today_str)
@@ -173,24 +177,29 @@ def main():
             "avg_temp": float(r["avg_temp"]) if r["avg_temp"] is not None else None,
         })
 
-
     insert_daily_report_to_postgres(daily_list)
 
     # ---------- MONTHLY ----------
-    print("Calculates monthly statistics...")
+    print("📆 Beregner månedlige statistikker...")
     report_month, avg_list, min_row, max_row = compute_monthly_analytics(df)
     if report_month:
         insert_monthly_avg_status_to_postgres(report_month, avg_list or [])
         if min_row and max_row:
             insert_monthly_extremes_to_postgres(report_month, min_row, max_row)
         else:
-            print("No daily data found — skipping extreme values.")
+            print("⚠️ Ingen daglige data fundet — springer ekstrem-værdier over.")
     else:
-        print("No valid month found — skipping monthly update.")
+        print("⚠️ Ingen gyldig måned fundet — springer månedlig opdatering over.")
 
     spark.stop()
-    print("Report completed. Data updated in the database.")
+    print("✅ WeatherDashboard job færdig. Data opdateret i databasen.")
 
 
 if __name__ == "__main__":
-    main()
+    while True:
+        try: 
+            main()
+        except Exception as e:
+            print(f"Error: {e}")
+        
+        time.sleep(20 * 60)
