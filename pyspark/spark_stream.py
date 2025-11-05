@@ -4,13 +4,36 @@ from pyspark.sql.types import StructType, StructField, StringType, DoubleType
 import sys
 import os
 import platform
+import subprocess
+import threading
+import time
+import pyspark_weather_dashboard
 from datetime import datetime
 
+import threading
 
+# Define the global thread variable outside of the function
+current_dashboard_thread = None
+
+def start_report_worker():
+    global current_dashboard_thread
+    # Check if the thread is not running, then start it
+    if current_dashboard_thread is None or not current_dashboard_thread.is_alive():
+        def run_dashboard():
+            subprocess.run(["python", "pyspark_weather_dashboard.py"])
+
+        current_dashboard_thread = threading.Thread(target=run_dashboard, daemon=True)
+        current_dashboard_thread.start()
+    else:
+        print("Dashboard already running.")
+
+
+# ✅ Import your database utility (ensure correct path)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from database_utils import insert_to_postgres
 
 def start_kafka_stream():
+    start_report_worker()
     # === Initialize Spark session with Kafka support ===
     is_windows = platform.system().lower().startswith("win")
     checkpoint_dir = (
@@ -18,12 +41,14 @@ def start_kafka_stream():
         if is_windows
         else "/tmp/spark_checkpoints/weather_kafka"
     )
+    print(is_windows)
 
     # === Windows ===
     if (is_windows):
         spark = (
             SparkSession.builder
             .appName("PySparkKafkaWeatherStream")
+            # ✅ Add Kafka connector (for Spark 4.0.1 and Scala 2.13)
             .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.1")
             .config("spark.sql.streaming.forceDeleteTempCheckpointLocation", "true")
             .config("spark.local.dir", "C:/tmp/spark_local")
@@ -34,7 +59,7 @@ def start_kafka_stream():
         spark = (
         SparkSession.builder
         .appName("PySparkKafkaWeatherStream")
-        .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1")
+        .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.7")
         .config("spark.sql.streaming.forceDeleteTempCheckpointLocation", "true")
         .config("spark.local.dir", "/tmp/spark_local")
         .getOrCreate()
@@ -111,7 +136,7 @@ def start_kafka_stream():
             try:
                 insert_to_postgres(record)
             except Exception as e:
-                print(f"Failed to insert record for {record.get('city')}: {e}")
+                print(f"❌ Failed to insert record for {record.get('city')}: {e}")
 
     # === Write stream and start listening ===
     query = (
