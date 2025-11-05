@@ -6,7 +6,7 @@ import os
 import platform
 from datetime import datetime
 
-# ✅ Import your database utility (ensure correct path)
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from database_utils import insert_to_postgres
 
@@ -18,14 +18,12 @@ def start_kafka_stream():
         if is_windows
         else "/tmp/spark_checkpoints/weather_kafka"
     )
-    print(is_windows)
 
     # === Windows ===
     if (is_windows):
         spark = (
             SparkSession.builder
             .appName("PySparkKafkaWeatherStream")
-            # ✅ Add Kafka connector (for Spark 4.0.1 and Scala 2.13)
             .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.1")
             .config("spark.sql.streaming.forceDeleteTempCheckpointLocation", "true")
             .config("spark.local.dir", "C:/tmp/spark_local")
@@ -113,7 +111,7 @@ def start_kafka_stream():
             try:
                 insert_to_postgres(record)
             except Exception as e:
-                print(f"❌ Failed to insert record for {record.get('city')}: {e}")
+                print(f"Failed to insert record for {record.get('city')}: {e}")
 
     # === Write stream and start listening ===
     query = (

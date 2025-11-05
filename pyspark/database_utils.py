@@ -61,18 +61,6 @@ def insert_to_postgres(json_input):
 
 
 # ========== GETTERS ==========
-def get_number_of_citys_from_postgres():
-    """Call the PostgreSQL function get_number_of_citys() and return the result"""
-    try:
-        with get_db_cursor() as cur:
-            cur.execute("SELECT get_number_of_citys();")
-            result = cur.fetchone()[0]
-        print(f"🏙️ There are {result} cities in the database.")
-        return result
-    except Exception as e:
-        print("Database fetch error:", e)
-
-
 def get_weather_from_postgres():
     """Fetch all weather data from PostgreSQL using get_weather_data()"""
     try:
