@@ -6,11 +6,11 @@ import os
 
 # ========== DATABASE CONFIG ==========
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "localhost"),
+    "host": os.getenv("DB_HOST", "10.101.17.71"),
     "port": os.getenv("DB_PORT", "5432"),
-    "dbname": os.getenv("DB_NAME", "weather_db"),
-    "user": os.getenv("DB_USER", "spark_user"),
-    "password": os.getenv("DB_PASSWORD", "SparkPass123")
+    "dbname": os.getenv("DB_NAME", "weather"),
+    "user": os.getenv("DB_USER", "kafka_user"),
+    "password": os.getenv("DB_PASSWORD", "RNJ#Database")
 }
 
 
